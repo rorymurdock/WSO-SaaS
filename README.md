@@ -6,3 +6,4 @@
 [![Requirements Status](https://requires.io/github/rorymurdock/WSO-SaaS/requirements.svg?branch=master)](https://requires.io/github/rorymurdock/WSO-SaaS/requirements/?branch=master)
 
 A Python framework for checking WSO SaaS Instances
+[Presentation](https://docs.google.com/presentation/d/1je03dtfxEHxcvEYu68Yho6L1mBmtyRI6NziP3ROpi5M/edit?usp=sharing)
