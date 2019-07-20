@@ -14,8 +14,15 @@ def list_splitter(instances, threads):
     # Randomise range to avoid some threads closing early with lots of blanks
     random.shuffle(instances)
 
-    for i in range(0, len(instances), threads):
-        yield instances[i:i+threads]
+    avg = len(instances) / float(threads)
+    out = []
+    last = 0.0
+
+    while last < len(instances):
+        out.append(instances[int(last):int(last + avg)])
+        last += avg
+
+    return out
 
 def check_instance(instance_list):
     """Iterate through the list and check the instance"""
@@ -31,7 +38,7 @@ def check_instance(instance_list):
 
 def start():
     """Start the threads"""
-    split = list(list_splitter(MAX_INSTANCE, MAX_THREADS))
+    split = list_splitter(MAX_INSTANCE, MAX_THREADS)
 
     threads = list()
     for index in range(MAX_THREADS):
