@@ -85,5 +85,6 @@ def test_get_hostname():
 
 def test_get_ip_location():
     """Test resolving an IP to a location"""
-    saas = CheckInstance(ACTIVE_INSTANCE)
-    assert saas.get_location() == 'Atlanta, Georgia, United States'
+    saas = CheckInstance(ACTIVE_INSTANCE, debug=True)
+    saas.check_hostname_valid()
+    assert saas.get_location() == '\"Atlanta, Georgia, United States\", AS23413 AirWatch LLC, AirWatch LLC'

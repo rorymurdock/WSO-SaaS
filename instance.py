@@ -145,18 +145,21 @@ class CheckInstance():
         headers = {'User-Agent': 'Mozilla/5.0'}
 
         # Create REST instance to Geo check IP
-        rest = REST(url='ipapi.co', debug=self.debug, headers=headers)
+        rest = REST(url='ip-api.com', protocol='http', debug=self.debug, headers=headers)
 
         # Query API
-        response = rest.get('/%s/json' % self.ip_address)
+        response = rest.get('/json/%s' % self.ip_address)
 
         # If succesful parse json and set location
         if response.status_code == 200:
             response = json.loads(response.text)
-            self.location = "%s,%s,%s" % (
+            print(response)
+            self.location = "\"%s, %s, %s\", %s, %s" % (
                 response['city'],
-                response['region'],
-                response['country_name']
+                response['regionName'],
+                response['country'],
+                response['as'],
+                response['org']
                 )
 
         return self.location
