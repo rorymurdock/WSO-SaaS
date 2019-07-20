@@ -1,2 +1,2 @@
 [run]
-omit = REST.py, scan.py
+omit = REST.py, scan.py, thread_scan.py
