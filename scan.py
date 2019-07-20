@@ -1,7 +1,7 @@
 """Iterate through a range of numbers and check the WSO SaaS Instance"""
 from instance import CheckInstance
 
-INSTANCE_LIST = range(0, 5000)
+INSTANCE_LIST = range(5000)
 CHECKED_INSTANCE = []
 OUTPUT = 'csv'
 
