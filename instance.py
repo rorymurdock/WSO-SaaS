@@ -153,7 +153,6 @@ class CheckInstance():
         # If succesful parse json and set location
         if response.status_code == 200:
             response = json.loads(response.text)
-            print(response)
             self.location = "\"%s, %s, %s\", %s, %s" % (
                 response['city'],
                 response['regionName'],
