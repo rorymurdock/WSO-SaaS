@@ -9,77 +9,92 @@ class CheckInstance():
     """Class for all WSO SaaS Checking functions"""
     def __init__(self, instance, debug=False):
         self.debug = debug
-        self.instance = instance
-        self.active = None
-        self.ip_address = None
-        self.version = None
-        self.hostname = None
-        self.location = None
+        self.csv_headers = False
+        self.output_names = [
+            'instance',
+            'active',
+            'ip_address',
+            'version',
+            'hostname',
+            'as',
+            'isp',
+            'city',
+            'regionName',
+            'country',
+            'countryCode',
+            'lat',
+            'lon'
+            ]
+        self.instance = {}
+
+        for i in self.output_names:
+            # print(i)
+            self.instance[i] = None
+        
+        self.instance['instance'] = instance
 
     def debug_print(self, message):
         """Prints debugging messages"""
         if self.debug:
             print(message)
 
+    def format_output_headers(self):
+        csv_output = ''
+        for name in self.output_names:
+            csv_output += "%s," % name
+        # Remove trailing comma
+        return csv_output[:-1]
+
     def format_output(self, output='json'):
         """Formats output"""
         #TODO: Add Google sheets output
         if output == 'json':
-            output = {}
-            output['instance'] = self.instance
-            output['active'] = self.active
-            output['IP'] = self.ip_address
-            output['version'] = self.version
-            output['hostname'] = self.hostname
-            output['location'] = self.location
-        elif output == 'csv':
-            output = ('%s,%s,%s,%s,%s,%s' % (
-                self.instance,
-                self.active,
-                self.ip_address,
-                self.version,
-                self.hostname,
-                self.location)
-                     )
+            return self.instance
+            # TODO: Run through and convert to json
+        if output in ['sheets', 'csv']:
+            csv_output = ''
+            for name in self.output_names:
+                csv_output += "%s," % self.instance[name]
+
+            # Remove trailing comma
+            return csv_output[:-1]
         else:
             print('Invalid output format')
-            output = None
 
-        return output
 
     def check_hostname_valid(self, path=None):
         """Checks hostname has DNS entry and responds to HTTP GET"""
         try:
             # Check if the DNS name resolves
-            self.ip_address = socket.gethostbyname('cn%s.awmdm.com' % self.instance)
+            self.instance['ip_address'] = socket.gethostbyname('cn%s.awmdm.com' % self.instance['instance'])
 
             # Test HTTP Request
             try:
                 # GET index
-                rest = REST('cn%s.awmdm.com/%s' % (self.instance, path), timeout=2, retries=2)
+                rest = REST('cn%s.awmdm.com/%s' % (self.instance['instance'], path), timeout=2, retries=2)
                 if rest.get('').status_code == 200:
                     self.debug_print('\t Active')
-                    self.active = True
+                    self.instance['active'] = True
                 else:
                     # Non 200 response, mark as inactive
-                    self.active = False
+                    self.instance['active'] = False
 
             # Catch Timeout or Connection Errors and mark as inactive
             except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
                 self.debug_print('\t - HTTP timeout')
-                self.active = False
+                self.instance['active'] = False
 
         # Catch DNS SERVFAIL
         except socket.gaierror:
             self.debug_print('\t - DNS error')
-            self.active = False
+            self.instance['active'] = False
 
-        return self.active
+        return self.instance['active']
 
     def get_version(self):
         """Get instance version"""
         # Create REST instance
-        rest = REST(url='cn%s.awmdm.com' % self.instance, debug=self.debug)
+        rest = REST(url='cn%s.awmdm.com' % self.instance['instance'], debug=self.debug)
 
         # At some stage the version file changed, try both
         urls = ['/api/help/local.json', '/api/system/help/localjson']
@@ -105,17 +120,19 @@ class CheckInstance():
                 re.M|re.I
                 ).group(2)
 
-            self.version = version
-            self.debug_print('\t Version: %s' % self.version)
+            self.instance['version'] = version
+            self.debug_print('\t Version: %s' % self.instance['version'])
+        elif response.status_code == 403:
+            self.instance['version'] = 'API Protected'
 
         # API could be behind an auth wall
         # Leave as None
-        return self.version
+        return self.instance['version']
 
     def check_redirection(self):
         """Checks if an instance redirects to a company hostname"""
         # Get base URL
-        rest = REST(url='cn%s.awmdm.com' % self.instance, debug=self.debug)
+        rest = REST(url='cn%s.awmdm.com' % self.instance['instance'], debug=self.debug)
         response = rest.get('')
 
         # If response array isn't empty then we have been redirected
@@ -134,10 +151,10 @@ class CheckInstance():
             except AttributeError:
                 hostname = response.url
 
-            self.hostname = hostname
-            self.debug_print('\t Hostname: %s' % self.hostname)
+            self.instance['hostname'] = hostname
+            self.debug_print('\t Hostname: %s' % self.instance['hostname'])
 
-        return self.hostname
+        return self.instance['hostname']
 
     def get_location(self):
         """Lookup IP location"""
@@ -148,17 +165,27 @@ class CheckInstance():
         rest = REST(url='ip-api.com', protocol='http', debug=self.debug, headers=headers)
 
         # Query API
-        response = rest.get('/json/%s' % self.ip_address)
+        response = rest.get('/json/%s' % self.instance['ip_address'])
 
         # If succesful parse json and set location
         if response.status_code == 200:
             response = json.loads(response.text)
-            self.location = "\"%s, %s, %s\", %s, %s" % (
-                response['city'],
-                response['regionName'],
-                response['country'],
-                response['as'],
-                response['org']
-                )
 
-        return self.location
+            # Remove comma from AS and ORG field
+            for field in ['as', 'org']:
+                response[field] = response[field].replace(',', '')
+            
+            location = {}
+            for name in [
+                'as',
+                'isp',
+                'city',
+                'regionName',
+                'country',
+                'countryCode',
+                'lat',
+                'lon']:
+                self.instance[name] = response[name]
+                location[name] = response[name]
+
+        return location

@@ -12,12 +12,24 @@ UNIQUE_URL = 814
 UNIQUE_URL_HOSTNAME = "nike.okta.com/login"
 
 BASE_JSON = {}
-BASE_JSON['instance'] = None
-BASE_JSON['active'] = None
-BASE_JSON['IP'] = None
-BASE_JSON['version'] = None
-BASE_JSON['hostname'] = None
-BASE_JSON['location'] = None
+OUTPUT_NAMES = [
+    'instance',
+    'active',
+    'ip_address',
+    'version',
+    'hostname',
+    'as',
+    'isp',
+    'city',
+    'regionName',
+    'country',
+    'countryCode',
+    'lat',
+    'lon'
+    ]
+
+for i in OUTPUT_NAMES:
+    BASE_JSON[i] = None
 
 def test_inactivate_instance():
     """Test inactive instance is marked as False"""
@@ -38,13 +50,11 @@ def test_inactivate_instance():
     saas = CheckInstance(HTTP_INACTIVE_INSTANCE)
 
     # Set json to compare
-    inactive_json = BASE_JSON
-    inactive_json['active'] = False
     inactive_json['instance'] = 40
-    inactive_json['IP'] = '205.139.50.61'
+    inactive_json['ip_address'] = '205.139.50.61'
 
     assert saas.check_hostname_valid() is False
-    assert saas.format_output(output='csv') == "40,False,205.139.50.61,None,None,None"
+    assert saas.format_output(output='csv') == "40,False,205.139.50.61,None,None,None,None,None,None,None,None,None,None"
     assert saas.format_output() == inactive_json
 
 
@@ -72,6 +82,9 @@ def test_get_version():
     saas = CheckInstance(STATIC_INSTANCE)
     assert saas.get_version() == STATIC_INSTANCE_VERSION
 
+def test_format_headers():
+    assert CheckInstance(0).format_output_headers() == 'instance,active,ip_address,version,hostname,as,isp,city,regionName,country,countryCode,lat,lon'
+
 def test_get_hostname():
     """Test hostnames are collected and parsed"""
     saas = CheckInstance(STATIC_INSTANCE)
@@ -87,4 +100,4 @@ def test_get_ip_location():
     """Test resolving an IP to a location"""
     saas = CheckInstance(ACTIVE_INSTANCE, debug=True)
     saas.check_hostname_valid()
-    assert saas.get_location() == '\"Atlanta, Georgia, United States\", AS23413 AirWatch LLC, AirWatch LLC'
+    assert saas.get_location() == {'as': 'AS23413 AirWatch LLC', 'isp': 'AirWatch LLC', 'city': 'Atlanta', 'regionName': 'Georgia', 'country': 'United States', 'countryCode': 'US', 'lat': 33.93, 'lon': -84.3509}
