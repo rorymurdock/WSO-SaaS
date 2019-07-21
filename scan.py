@@ -5,6 +5,9 @@ INSTANCE_LIST = range(5000)
 CHECKED_INSTANCE = []
 OUTPUT = 'csv'
 
+if OUTPUT == "csv":
+    print(CheckInstance(0).format_output_headers())
+
 for instance in INSTANCE_LIST:
     SAAS = CheckInstance(instance)
     if not SAAS.check_hostname_valid():
