@@ -1,1 +1,1 @@
-requests>=2.21.0
+reqREST>=0.0.1

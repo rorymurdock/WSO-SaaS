@@ -3,7 +3,7 @@ import socket
 import json
 import re
 import requests
-from REST import REST
+from reqREST import REST
 
 class CheckInstance():
     """Class for all WSO SaaS Checking functions"""
@@ -172,7 +172,7 @@ class CheckInstance():
             response = json.loads(response.text)
 
             # Remove comma from AS and ORG field
-            for field in ['as', 'org']:
+            for field in ['as', 'org', 'isp']:
                 response[field] = response[field].replace(',', '')
             
             location = {}
