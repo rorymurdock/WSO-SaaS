@@ -1,6 +1,5 @@
 """Multi-threaded version of the instance scanner"""
 import threading
-import random
 from instance import CheckInstance
 
 OUTPUT = 'csv'
@@ -9,11 +8,7 @@ MAX_INSTANCE = 5000
 
 def list_splitter(instances, threads):
     """Take the instance, range it and split into equal threads"""
-    instances = list(range(instances))
-
-    # Randomise range to avoid some threads closing early with lots of blanks
-    random.shuffle(instances)
-
+    instances = range(instances)
     avg = len(instances) / float(threads)
     out = []
     last = 0.0
@@ -42,6 +37,7 @@ def start():
 
     threads = list()
     for index in range(MAX_THREADS):
+        # logging.info("Main    : create and start thread %d.", index)
         thread = threading.Thread(target=check_instance, args=(split[index],))
         threads.append(thread)
         thread.start()
